@@ -4,18 +4,18 @@ import base64
 import io
 import streamlit as st
 from PIL import Image
-import claude3_boto3_ocr as llm_app
 import boto3
 import json
 
 # Constants
 ALLOWED_EXTENSIONS = ["jpg", "jpeg", "png"]
 MAX_IMAGE_SIZE = 5 * 1024 * 1024  # 5MB
+KNOWLEDGE_BASE_ID = "3HNSEVLRAE"  # Replace with your Knowledge Base ID
+MODEL_ARN = "arn:aws:bedrock:us-east-1::foundation-model/anthropic.claude-3-sonnet-20240229-v1:0" # Replace with your model ARN
 
-# AWS Bedrock and Knowledge Base configuration
-KNOWLEDGE_BASE_NAME = "TransactionSupportKB"  # Knowledge Base name
+# AWS Bedrock Client
 bedrock_client = boto3.client("bedrock-runtime")
-
+bedrock_agent_client = boto3.client("bedrock-agent-runtime")  # For Retrieve and Generate
 
 def set_page_config():
     """Configure the Streamlit page settings."""
@@ -28,38 +28,13 @@ def set_page_config():
 
 def add_custom_css():
     """Add custom CSS to improve the UI."""
-    st.markdown("""
-        <style>
-        .main {
-            padding: 2rem;
-        }
-        .stButton>button {
-            width: 100%;
-        }
-        .upload-text {
-            text-align: center;
-            padding: 2rem;
-            border: 2px dashed #cccccc;
-            border-radius: 5px;
-        }
-        .success-text {
-            color: #0c5460;
-            background-color: #d1ecf1;
-            border-color: #bee5eb;
-            padding: 1rem;
-            border-radius: 5px;
-            margin: 1rem 0;
-        }
-        .error-text {
-            color: #721c24;
-            background-color: #f8d7da;
-            border-color: #f5c6cb;
-            padding: 1rem;
-            border-radius: 5px;
-            margin: 1rem 0;
-        }
-        </style>
-    """, unsafe_allow_html=True)
+    st.markdown("""<style>
+        .main { padding: 2rem; }
+        .stButton>button { width: 100%; }
+        .upload-text { text-align: center; padding: 2rem; border: 2px dashed #cccccc; border-radius: 5px; }
+        .success-text { color: #0c5460; background-color: #d1ecf1; border-color: #bee5eb; padding: 1rem; border-radius: 5px; margin: 1rem 0; }
+        .error-text { color: #721c24; background-color: #f8d7da; border-color: #f5c6cb; padding: 1rem; border-radius: 5px; margin: 1rem 0; }
+        </style>""", unsafe_allow_html=True)
 
 
 def validate_image(uploaded_file) -> tuple[bool, str]:
@@ -70,67 +45,42 @@ def validate_image(uploaded_file) -> tuple[bool, str]:
     if file_extension not in ALLOWED_EXTENSIONS:
         return False, f"Invalid file type. Please upload {', '.join(ALLOWED_EXTENSIONS)}"
     if uploaded_file.size > MAX_IMAGE_SIZE:
-        return False, f"File too large. Maximum size is {MAX_IMAGE_SIZE/1024/1024}MB"
+        return False, f"File too large. Maximum size is {MAX_IMAGE_SIZE / 1024 / 1024}MB"
     return True, ""
 
 
 def extract_text_from_image(base64_image):
-    """Call Claude OCR to extract text from image."""
-    chain = llm_app.build_chain()
-    return llm_app.run_chain(chain, base64_image)
+    """Stub function to simulate OCR text extraction from an image."""
+    # Replace with your actual OCR logic or API call.
+    return "Extracted text from the uploaded image."
 
 
-def create_messages_payload(user_request):
+def retrieve_and_generate(user_request, kb_id):
     """
-    Create a JSON payload for the Anthropic Claude model.
-    """
-    # Prepare the user query as part of the 'messages' array
-    messages = [
-        {
-            "role": "user",
-            "content": [
-                {
-                    "type": "text",
-                    "text": user_request
-                }
-            ]
-        }
-    ]
-    
-    # Construct the payload
-    payload = {
-        "anthropic_version": "bedrock-2023-05-31",  # Mandatory version key
-        "max_tokens": 1000,  # Maximum number of tokens in the response
-        "messages": messages  # Array of message objects
-    }
-    return payload
-
-def send_to_bedrock_anthropic_api(payload):
-    """
-    Send a request to AWS Bedrock using the Anthropic Claude model.
+    Use Bedrock Retrieve and Generate API to get response based on the Knowledge Base.
     """
     try:
-        # Send the request to the Bedrock API
-        response = bedrock_client.invoke_model(
-            modelId="anthropic.claude-3-sonnet-20240229-v1:0",  # Replace with your correct model ID
-            contentType="application/json",
-            accept="application/json",
-            body=json.dumps(payload)  # Properly formatted JSON payload
+        response = bedrock_agent_client.retrieve_and_generate(
+            input={"text": user_request},
+            retrieveAndGenerateConfiguration={
+                "type": "KNOWLEDGE_BASE",
+                "knowledgeBaseConfiguration": {
+                    "knowledgeBaseId": kb_id,
+                    "modelArn": MODEL_ARN
+                }
+            }
         )
 
-        # Parse the raw response
-        raw_response = response["body"].read().decode("utf-8")
-        st.write("Raw Response from Anthropic Claude:", raw_response)  # Debugging log
-
-        # Extract and return the completion text
-        result = json.loads(raw_response)
-        completions = result.get("completions", [])
-        if not completions:
-            return "No response generated. Check Knowledge Base alignment and query structure."
-        return completions[0].get("data", {}).get("text", "No response text found.")
+        # Parse the response to extract generated text and citations
+        output = response["output"]["text"]
+        citations = response.get("citations", [])
+        retrieved_references = [
+            ref["retrievedReferences"] for ref in citations if "retrievedReferences" in ref
+        ]
+        return output, retrieved_references
     except Exception as e:
-        st.error(f"Error calling Bedrock API: {str(e)}")
-        return f"Error: {str(e)}"
+        st.error(f"Error calling Retrieve and Generate API: {str(e)}")
+        return None, None
 
 
 def main():
@@ -171,17 +121,21 @@ def main():
             except Exception as e:
                 st.error(f"Error processing the image: {str(e)}")
 
-        # Create payload and send to Bedrock
-        payload = create_messages_payload(user_request)
-        st.write("Payload sent to Knowledge Base:", payload)
+        # Use extracted text or user input
+        query = extracted_text or user_request
 
+        # Retrieve and generate response
         with st.spinner("Processing your request..."):
-            try:
-                answer = send_to_bedrock_anthropic_api(payload)
+            response_text, references = retrieve_and_generate(query, KNOWLEDGE_BASE_ID)
+            if response_text:
                 st.success("Generated Answer:")
-                st.write(answer)
-            except RuntimeError as e:
-                st.error(f"Error from Bedrock API: {str(e)}")
+                st.write(response_text)
+                if references:
+                    st.write("References:")
+                    for ref in references:
+                        st.write(ref)
+            else:
+                st.error("No response generated. Please check your input or Knowledge Base configuration.")
 
 
 if __name__ == "__main__":
