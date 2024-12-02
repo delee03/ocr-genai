@@ -10,8 +10,8 @@ import json
 # Constants
 ALLOWED_EXTENSIONS = ["jpg", "jpeg", "png"]
 MAX_IMAGE_SIZE = 5 * 1024 * 1024  # 5MB
-KNOWLEDGE_BASE_ID = "3HNSEVLRAE"  # Replace with your Knowledge Base ID
-MODEL_ARN = "arn:aws:bedrock:us-east-1::foundation-model/anthropic.claude-3-sonnet-20240229-v1:0" 
+KNOWLEDGE_BASE_ID = "QSDX9TVNUP"  # Replace with your Knowledge Base ID
+MODEL_ARN = "arn:aws:bedrock:us-east-1::foundation-model/anthropic.claude-3-5-sonnet-20240620-v1:0" 
 #Knowledge Base Model arn of Foundation Model - Sonet 3.0
 
 # AWS Bedrock Client
