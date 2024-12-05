@@ -6,7 +6,7 @@ from PIL import Image
 import boto3
 import json
 import pytesseract
-pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"  # Đảm bảo đường dẫn đúng
+pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"  #Path to Tesseract OCR executable
 
 # Constants
 ALLOWED_EXTENSIONS = ["jpg", "jpeg", "png"]
