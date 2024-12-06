@@ -269,27 +269,29 @@ def render_chat_interface():
 
     // Xử lý tải tệp hình ảnh
     function uploadFile() {
-        const fileInput = document.getElementById('file-upload');
-        const file = fileInput.files[0];
+    const fileInput = document.getElementById('file-upload');
+    const file = fileInput.files[0];
 
-        if (file) {
-            // Kiểm tra nếu là hình ảnh
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const chatContainer = document.getElementById('chat-container');
-                const imageDiv = document.createElement('div');
-                imageDiv.classList.add('mb-2', 'text-right');  // Căn phải cho hình ảnh người dùng gửi
-                
-                // Hiển thị hình ảnh trong chatbox
-                imageDiv.innerHTML = `
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            const chatContainer = document.getElementById('chat-container');
+            const imageDiv = document.createElement('div');
+            imageDiv.classList.add('mb-2', 'text-right'); // Căn phải cho hình ảnh
+            
+            // Hiển thị hình ảnh với CSS tương tự tin nhắn văn bản
+            imageDiv.innerHTML = `
+                <span class="inline-block bg-blue-500 rounded-lg p-2">
                     <img src="${e.target.result}" class="max-w-xs rounded-lg shadow-lg" alt="Uploaded Image" />
-                `;
-                chatContainer.appendChild(imageDiv);
-                chatContainer.scrollTop = chatContainer.scrollHeight;  // Tự động cuộn xuống cuối
-            }
-            reader.readAsDataURL(file);  // Đọc tệp hình ảnh dưới dạng URL
+                </span>
+            `;
+            chatContainer.appendChild(imageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight; // Tự động cuộn xuống cuối
         }
+        reader.readAsDataURL(file); // Đọc tệp hình ảnh dưới dạng URL
     }
+}
+
 
     // Hàm xử lý kết quả từ Tesseract hoặc Knowledge Base
     function displayResultFromBot(resultText) {
