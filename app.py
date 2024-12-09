@@ -11,7 +11,7 @@ pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tessera
 # Constants
 ALLOWED_EXTENSIONS = ["jpg", "jpeg", "png"]
 MAX_IMAGE_SIZE = 5 * 1024 * 1024  # 5MB
-KNOWLEDGE_BASE_ID = "QSDX9TVNUP"
+KNOWLEDGE_BASE_ID = "VIBMDAEXUG"
 MODEL_ARN = "arn:aws:bedrock:us-east-1::foundation-model/anthropic.claude-3-5-sonnet-20240620-v1:0" 
 
 # AWS Bedrock Client
@@ -106,32 +106,6 @@ def main():
     """Main function to run the app."""
     st.title("Transaction Assistance Chatbot")
 
-    # # File upload section
-    # uploaded_file = st.file_uploader("Upload Image", type=["jpg", "jpeg", "png"])
-    # user_input = st.text_area("Enter your query:")
-
-    # # Validate file if uploaded
-    # if uploaded_file is not None:
-    #     is_valid, error_message = validate_image(uploaded_file)
-    #     if not is_valid:
-    #         st.error(error_message)
-    #     else:
-    #         extracted_text = extract_text_from_image(uploaded_file)        
-    #         if extracted_text:
-    #             st.success("Text extracted from image successfully.")
-    #             st.text_area("Extracted Text", extracted_text)
-
-    # # Query button
-    # if st.button("Submit"):
-    #     if not user_input and not extracted_text:
-    #         st.error("Please provide either a query or an image.")
-    #     else:
-    #         # Gọi hàm retrieve_and_generate, nếu không có ảnh thì chỉ gửi user_input
-    #         response, references = retrieve_and_generate(user_input or None, extracted_text or None)
-    #         if response:
-    #             st.write("Response: ", response)
-    #             if references:
-    #                 st.write("References: ", references)
 
   
 
