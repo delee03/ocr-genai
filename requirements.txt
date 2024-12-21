@@ -16,3 +16,4 @@ aws configure get region
 
 ### Set region 
 aws configure set region us-east-1
+aws configure set region ap-southeast-1
